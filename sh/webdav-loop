@@ -1,0 +1,14 @@
+#! /usr/bin/env sh
+
+PERIOD=${1:-10}
+
+. webdav-trap
+
+while true; do
+    if [ -z "$(ps aux | grep "[m]ount.davfs")" ] || [ -z "$(ls -1A "$WEBDAV_MOUNT")" ]; then
+        exit 
+    fi
+    ls "$WEBDAV_MOUNT"
+    sleep $PERIOD
+done
+

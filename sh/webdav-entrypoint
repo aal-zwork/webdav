@@ -1,0 +1,55 @@
+#! /usr/bin/env sh
+
+#echo $WEBDAV_URL
+#echo $WEBDAV_USERNAME
+#echo $WEBDAV_PASSWORD
+
+#echo $WEBDAV_MOUNT
+#echo $WEBDAV_UID
+#echo $WEBDAV_GID
+#echo $WEBDAV_DIRMODE
+#echo $WEBDAV_FILEMODE
+MOUNTPIDF=/var/run/mount.davfs/cldsync-drive.pid
+
+if [ -z "$WEBDAV_URL" ]; then
+    echo "Nothing found in WEBDAV_URL to mount, giving up!" 
+    exit 1
+fi
+
+if [ ! -d $WEBDAV_MOUNT ]; then
+    mkdir -p $WEBDAV_MOUNT
+fi
+
+if [ ! -z "$WEBDAV_USERNAME" ]; then
+    echo "$WEBDAV_MOUNT $WEBDAV_USERNAME $WEBDAV_PASSWORD" > /etc/davfs2/secrets
+fi
+unset WEBDAV_PASSWORD                                              
+
+if [ -n "$(env | grep "DAVFS2_")" ]; then
+    echo "[$WEBDAV_MOUNT]" > /etc/davfs2/davfs2.conf
+    for VAR in $(env); do
+        if [ -n "$(echo "$VAR" | grep -E '^DAVFS2_')" ]; then
+            OPT_NAME=$(echo "$VAR" | sed -r "s/DAVFS2_([^=]*)=.*/\1/g" | tr '[:upper:]' '[:lower:]')
+            VAR_FULL_NAME=$(echo "$VAR" | sed -r "s/([^=]*)=.*/\1/g")
+            VAL=$(eval echo \$$VAR_FULL_NAME)
+            echo "$OPT_NAME $VAL" >> /etc/davfs2/davfs2.conf
+        fi
+    done
+fi
+
+if [ -f $MOUNTPIDF ] && [ -z $(ps aux | grep "[m]ount.davfs") ]; then
+    echo "Clear before pid file"
+    #kill -9 $(cat $MOUNTPIDF)
+    rm -f $MOUNTPIDF
+fi
+
+mount -t davfs $WEBDAV_URL $WEBDAV_MOUNT \
+    -o uid=$WEBDAV_UID,gid=$WEBDAV_GID,dir_mode=$WEBDAV_DIRMODE,file_mode=$WEBDAV_FILEMODE
+
+if [ $? -eq 0 ] && [ -n "$(ls -1A $WEBDAV_MOUNT)" ]; then
+    echo "Mounted $WEBDAV_URL onto $WEBDAV_MOUNT"
+    exec "$@"
+else
+    echo "Nothing found in $WEBDAV_MOUNT, giving up!"
+    exit 2
+fi
