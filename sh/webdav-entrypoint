@@ -37,9 +37,10 @@ if [ -n "$(env | grep "DAVFS2_")" ]; then
     done
 fi
 
-if [ -f $MOUNTPIDF ] && [ -z $(ps aux | grep "[m]ount.davfs") ]; then
+if [ -f $MOUNTPIDF ]; then
+    #if [ -z $(ps aux | grep "[m]ount.davfs") ]; then
     echo "Clear before pid file"
-    #kill -9 $(cat $MOUNTPIDF)
+    kill -9 $(cat $MOUNTPIDF)
     rm -f $MOUNTPIDF
 fi
 
