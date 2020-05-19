@@ -9,7 +9,7 @@
 #echo $WEBDAV_GID
 #echo $WEBDAV_DIRMODE
 #echo $WEBDAV_FILEMODE
-MOUNTPIDF=/var/run/mount.davfs/cldsync-drive.pid
+MOUNTPIDF=/var/run/mount.davfs/mnt-webdrive.pid
 
 if [ -z "$WEBDAV_URL" ]; then
     echo "Nothing found in WEBDAV_URL to mount, giving up!" 
